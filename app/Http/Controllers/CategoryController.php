@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Category\CategoryUpdateRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\CategoryService;
 use App\Interfaces\CategoryServiceInterface;
 use App\Http\Resources\CategoryCollection;
+use App\Http\Resources\CategoryResource;
+use App\Http\Requests\Category\CategoryStoreRequest;
+use Illuminate\Http\Response;
 
 class CategoryController extends Controller
 {
@@ -38,13 +43,17 @@ class CategoryController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Store a newly created resource in storage.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function store(CategoryStoreRequest $request) : CategoryResource
     {
-        //
+        $data = $request->validated();
+        $category = $this->categoryService->store($data);
+
+        return new CategoryResource($category);
     }
 
     /**
@@ -55,18 +64,9 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        //
-    }
+        $category = $this->categoryService->show($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        return new CategoryResource($category);
     }
 
     /**
@@ -76,9 +76,12 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CategoryUpdateRequest $request, int $id) : CategoryResource
     {
-        //
+        $data = $request->validated();
+        $category = $this->categoryService->store($data, $id);
+
+        return new CategoryResource($category);
     }
 
     /**
@@ -87,8 +90,18 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id) : JsonResponse
     {
-        //
+        $category = $this->categoryService->destroy($id);
+        if($category){
+            $message = 'Successfully deleted';
+        }else{
+            $message = 'Category not empty';
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $message
+        ], Response::HTTP_OK);
     }
 }
